@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #013220 ;
+            margin: 20px;
+        }
+
+        #uploadForm {
+            background-color: #cdd2d6;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 20px auto;
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        #loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <h1>Guava Disease Detection</h1>
+        <p>Upload an image of a guava to detect diseases</p>
+        <input type="file" id="imageFile" name="file" accept="image/*">
+        <button type="button" onclick="uploadImage()">Detect Disease</button>
+        <div id="loading">Processing...</div>
+        <div id="result"></div>
+    </form>
+
+    <script>
+        function uploadImage() {
+            const formData = new FormData();
+            const imageFile = document.getElementById("imageFile").files[0];
+            const loadingDiv = document.getElementById('loading');
+            const resultDiv = document.getElementById('result');
+
+            if (!imageFile) {
+                resultDiv.innerHTML = '<p style="color: red;">Please select an image file.</p>';
+                return;
+            }
+
+            formData.append("file", imageFile);
+            
+            loadingDiv.style.display = 'block';
+            resultDiv.innerHTML = '';
+
+            fetch("/predict", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+                if (data.error) {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p>Predicted Class: ${data.predicted_class}</p>
+                        <p>Confidence: ${data.confidence}</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                loadingDiv.style.display = 'none';
+                resultDiv.innerHTML = `<p style="color: red;">An error occurred: ${error.message}</p>`;
+            });
+        }
+    </script>
+
+</body>
+</html>
